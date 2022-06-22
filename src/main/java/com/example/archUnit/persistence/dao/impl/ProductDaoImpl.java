@@ -1,7 +1,7 @@
-package com.example.archUnit.persistance.dao.impl;
+package com.example.archUnit.persistence.dao.impl;
 
 import com.example.archUnit.domain.Product;
-import com.example.archUnit.persistance.dao.ProductDao;
+import com.example.archUnit.persistence.dao.ProductDao;
 import org.springframework.stereotype.Service;
 
 @Service

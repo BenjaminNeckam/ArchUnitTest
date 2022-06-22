@@ -1,4 +1,4 @@
-package com.example.archUnit.persistance.dao;
+package com.example.archUnit.persistence.dao;
 
 import com.example.archUnit.domain.Product;
 
