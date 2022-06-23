@@ -10,6 +10,7 @@ import com.tngtech.archunit.library.metrics.ComponentDependencyMetrics;
 import com.tngtech.archunit.library.metrics.LakosMetrics;
 import com.tngtech.archunit.library.metrics.MetricsComponent;
 import com.tngtech.archunit.library.metrics.MetricsComponents;
+import com.tngtech.archunit.library.metrics.VisibilityMetrics;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ public class ArchitectureMetricTest {
         .importPackages("com.example.archUnit");
   }
 
+  // Good for finding cycles within components
   @Test
   void cumulativeDependencyMetric() {
     Set<JavaPackage> packages = importedClasses.getPackage("com.example.archUnit").getSubpackages();
@@ -33,10 +35,16 @@ public class ArchitectureMetricTest {
 
     LakosMetrics metrics = ArchitectureMetrics.lakosMetrics(components);
 
-    System.out.println("CCD: " + metrics.getCumulativeComponentDependency());
-    System.out.println("ACD: " + metrics.getAverageComponentDependency());
-    System.out.println("RACD: " + metrics.getRelativeAverageComponentDependency());
-    System.out.println("NCCD: " + metrics.getNormalizedCumulativeComponentDependency());
+    System.out.println("The sum of all DependsOn values of all components (CCD): " + metrics.getCumulativeComponentDependency());
+
+    System.out.println("The CCD divided by the number of all components (ACD): " + metrics.getAverageComponentDependency());
+
+    System.out.println(
+        "The ACD divided by the number of all components (RACD): " + metrics.getRelativeAverageComponentDependency());
+
+    System.out.println(
+        "The CCD of the system divided by the CCD of a balanced binary tree with the same number of components (NCCD): "
+            + metrics.getNormalizedCumulativeComponentDependency());
   }
 
   @Test
@@ -46,10 +54,37 @@ public class ArchitectureMetricTest {
 
     ComponentDependencyMetrics metrics = ArchitectureMetrics.componentDependencyMetrics(components);
 
-    System.out.println("Ce: " + metrics.getEfferentCoupling("com.example.archUnit"));
-    System.out.println("Ca: " + metrics.getAfferentCoupling("com.example.archUnit"));
-    System.out.println("I: " + metrics.getInstability("ccom.example.archUnit"));
-    System.out.println("A: " + metrics.getAbstractness("com.example.archUnit"));
-    System.out.println("D: " + metrics.getNormalizedDistanceFromMainSequence("com.example.archUnit"));
+    System.out.println("The number of outgoing dependencies to any other component (Ce): " + metrics.getEfferentCoupling(
+        "com.example.archUnit.service"));
+
+    System.out.println("The number of incoming dependencies from any other component (Ca): " + metrics.getAfferentCoupling(
+        "com.example.archUnit.service"));
+
+    // value closer to 1, have many outgoing and not many incoming dependencies is unstable due to possibility of easy changes to the packages
+    // value closer to 0, have many incoming and not many outgoing dependencies are rather difficult to modify due to their responsibility
+    System.out.println("The relationship of outgoing dependencies to all dependencies (I): " + metrics.getInstability(
+        "com.example.archUnit.service"));
+
+    System.out.println("num(abstract_classes) / num(all_classes) in the component (A): " + metrics.getAbstractness(
+        "com.example.archUnit.service"));
+
+    System.out.println("The normalized distance from the ideal line between (A=1, I=0) and (A=0, I=1) (D): "
+        + metrics.getNormalizedDistanceFromMainSequence("com.example.archUnit.service"));
+  }
+
+  @Test
+  void visibilityMetric() {
+    Set<JavaPackage> packages = importedClasses.getPackage("com.example.archUnit").getSubpackages();
+    MetricsComponents<JavaClass> components = MetricsComponents.fromPackages(packages);
+
+    VisibilityMetrics metrics = ArchitectureMetrics.visibilityMetrics(components);
+
+    System.out.println("num(visible_elements) / num(all_elements) for each component (RV) : " + metrics.getRelativeVisibility(
+        "com.example.archUnit.service"));
+
+    System.out.println("The average of all RV values (ARV): " + metrics.getAverageRelativeVisibility());
+
+    System.out.println(
+        "num(visible_elements) / num(all_elements) over all components (GRV): " + metrics.getGlobalRelativeVisibility());
   }
 }
